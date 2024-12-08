@@ -84,3 +84,7 @@ try:
 except Exception as e:
     print(f"An error occurred: {e}")
 
+# task 3 - import csv to pandas df
+
+customer_df = pd.read_csv("customer_activity_data.csv")
+print(customer_df)
