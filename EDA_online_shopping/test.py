@@ -1,4 +1,7 @@
+import numpy as np
 import pandas as pd
+from scipy import stats
+
 
 # task 3 - import csv to pandas df
 customer_df = pd.read_csv("customer_activity_data.csv")
@@ -87,6 +90,51 @@ class DataFrameTransform:
                     print("Imputing column with mean due to negative skew")
                     self.dataframe[column].fillna(self.dataframe[column].mean(), inplace=True)
 
+    def log_skew_transform(self, skewed_columns):
+        transformations = {}
+
+        for column in skewed_columns:
+            if self.dataframe[column].dtype == "bool":
+                print(f"Ignoring boolean column: {column}")
+                continue
+
+            original_skew = self.dataframe[column].skew()
+            print(f"Original skew for {column}: {original_skew}")
+
+            # Apply transformations and calculate new skew
+            log_transformed = np.log1p(self.dataframe[column])  # log(1 + x) to handle zero values
+            sqrt_transformed = np.sqrt(self.dataframe[column])
+            boxcox_transformed, _ = stats.boxcox(self.dataframe[column] + 1)  # Adding 1 for zero values
+
+            # Calculate skew for each transformation
+            log_skew = log_transformed.skew()
+            sqrt_skew = sqrt_transformed.skew()
+            boxcox_skew = pd.Series(boxcox_transformed).skew()
+
+            # Store the transformations that reduce skew the most
+            skew_values = {
+                "original": original_skew,
+                "log": log_skew,
+                "sqrt": sqrt_skew,
+                "boxcox": boxcox_skew
+            }
+            
+            # Select the transformation with the minimum skew
+            best_transformation = min(skew_values, key=skew_values.get)
+            transformations[column] = best_transformation
+            
+            # Choose the best transformation based on skew reduction
+            if best_transformation == "log":
+                self.dataframe[column] = log_transformed
+            elif best_transformation == "sqrt":
+                self.dataframe[column] = sqrt_transformed
+            elif best_transformation == "boxcox":
+                self.dataframe[column] = boxcox_transformed
+            
+            print(f"Best transformation for {column}: {best_transformation} with skew {skew_values[best_transformation]}")
+        
+        return transformations
+
     def check_nulls(self):
         return self.dataframe.isnull().sum()
     
@@ -129,11 +177,21 @@ import matplotlib
 matplotlib.use('TkAgg')  # Try using the TkAgg backend for rendering
 import matplotlib.pyplot as plt
 
-#print(f"Skew of administrative column is {df['administrative'].skew()}")
-#print(f"Skew of administrative_duration column is {df['administrative_duration'].skew()}")
-#print(f"Skew of informational_duration column is {df['informational_duration'].skew()}")
-#print(f"Skew of product_related column is {df['product_related'].skew()}")
-#print(f"Skew of product_related_duration column is {df['product_related_duration'].skew()}")
+class FindSkew:
+    def __init__(self,dataframe):
+        self.dataframe = dataframe
+
+    def identify_skew(self, threshold=0.5):
+        skewness = self.dataframe.skew(numeric_only=True)
+        skewed_columns = skewness[skewness.abs() > threshold]
+        return skewed_columns
+    def skew_hist(self, skew_columns, plotter):
+        for column in skew_columns.index:
+            if self.dataframe[column].dtype =='bool':
+                continue
+            print(f"Visualising column: {column}")
+            plotter.plot_histogram(self.dataframe[column], title=f"Histogram for {column}")
+
 
 
 class Plotter:
@@ -155,18 +213,37 @@ class Plotter:
         plt.legend()
         plt.tight_layout()
         plt.show()
-
-
-
-
-# Simple plot for testing
-x = [1, 2, 3, 4, 5]
-y = [10, 20, 25, 30, 40]
-plt.plot(x, y)
-plt.show()
-
-xxx
+    
+    @staticmethod
+    def plot_histogram(column_data, title):
+        if column_data.dtype == 'bool':
+            column_data = column_data.astype(int) # convert true/false to 1/0
+        plt.figure(figsize=(8, 5))
+        plt.hist(column_data, bins=30, color='skyblue', edgecolor='black')
+        plt.title(title)
+        plt.xlabel('Value')
+        plt.ylabel('Frequency')
+        plt.tight_layout()
+        plt.show()
 
 # Create Plotter object and plot comparison
 plotter = Plotter()
 plotter.plot_null_comparison(before_null, after_null)
+
+skew_analysis = FindSkew(transformed_df)
+skew_columns = skew_analysis.identify_skew(threshold=0.5)
+#print(f"Skewed Columns: \n{skew_columns}")
+#skew_analysis.skew_hist(skew_columns, plotter) 
+
+df_transformer = DataFrameTransform(transformed_df)
+df_transformer.log_skew_transform(skew_columns.index)
+
+transformed_df = df_transformer.get_df()
+
+
+print("Plotting updated histograms for transformed columns..")
+#for column in skew_columns.index:
+    #print(f"Visualising transformed column: {column}")
+    #plotter.plot_histogram(transformed_df[column], title=f"Updated histogram for {column}")
+
+transformed_df.to_csv("transformed_customer_activity.csv", index=False)
