@@ -228,7 +228,7 @@ class Plotter:
 
 # Create Plotter object and plot comparison
 plotter = Plotter()
-plotter.plot_null_comparison(before_null, after_null)
+#plotter.plot_null_comparison(before_null, after_null)
 
 skew_analysis = FindSkew(transformed_df)
 skew_columns = skew_analysis.identify_skew(threshold=0.5)
@@ -243,7 +243,71 @@ transformed_df = df_transformer.get_df()
 
 print("Plotting updated histograms for transformed columns..")
 #for column in skew_columns.index:
-    #print(f"Visualising transformed column: {column}")
-    #plotter.plot_histogram(transformed_df[column], title=f"Updated histogram for {column}")
+#    print(f"Visualising transformed column: {column}")
+#    plotter.plot_histogram(transformed_df[column], title=f"Updated histogram for {column}")
 
-transformed_df.to_csv("transformed_customer_activity.csv", index=False)
+#transformed_df.to_csv("transformed_customer_activity.csv", index=False)
+
+
+# boxplot of all columns 
+import plotly
+import plotly.express as px
+# create a boxplot of amount:
+def box_plots(dataframe):
+    for column in dataframe.columns:
+        if dataframe[column].dtype in ['int64', 'float64']:
+            fig = px.box(dataframe, y=column, title = f"Boxplot for {column}")
+            fig.update_layout(yaxis_title="Values", xaxis_title="")
+            fig.show()
+        else:
+            print(f"Skipping non-numeric column: {column}")
+
+#box_plots(transformed_df)
+
+
+
+columns_to_exclude = ['month', 'operating_systems', 'browser', 'region', 'traffic_type', 'visitor_type', 'weekend', 'revenue']
+numeric_data = transformed_df.drop(columns=columns_to_exclude)
+
+# Define a function to identify outliers using IQR
+def detect_outliers_iqr(df):
+    outliers = {}
+    for col in df.columns:
+        Q1 = df[col].quantile(0.25)
+        Q3 = df[col].quantile(0.75)
+        IQR = Q3 - Q1
+        lower_bound = Q1 - 1.5 * IQR
+        upper_bound = Q3 + 1.5 * IQR
+        # Find outliers
+        outliers[col] = df[(df[col] < lower_bound) | (df[col] > upper_bound)][col]
+    return outliers
+
+# Detect outliers
+outliers = detect_outliers_iqr(numeric_data)
+
+# Print summary of outliers
+for col, outlier_vals in outliers.items():
+    print(f"{col}: {len(outlier_vals)} outliers detected.")
+
+# Identify columns with outliers
+columns_with_outliers = [col for col, vals in outliers.items() if len(vals) > 0]
+
+# Transform outliers using the existing class
+from scipy import stats
+
+# Initialize the transformer
+transformer_2 = DataFrameTransform(transformed_df)
+
+# Apply log-skew transform to columns with outliers
+transformations_2 = transformer_2.log_skew_transform(columns_with_outliers)
+
+# Get the transformed dataframe
+transformed_df_2 = transformer_2.get_df()
+
+# Display summary of transformations
+#print("Transformations applied to reduce outliers and skewness:")
+#for col, transformation in transformations_2.items():
+#    print(f"{col}: {transformation}")
+
+print(transformed_df_2.describe())
+box_plots(transformed_df_2)
