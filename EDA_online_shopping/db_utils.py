@@ -3,19 +3,30 @@ import pandas as pd
 from sqlalchemy import create_engine, text
 from sqlalchemy.pool import QueuePool
 
-# Function to load credentials from credentials.yaml file
 def load_credentials(file):
+    """
+    Function loads the credentials required to connect to the RDS database. 
+    Returns credentials as a dictionary with keys:
+    - host
+    - password 
+    - user
+    - database
+    - port
+    """
     with open(file, "r") as f:
         credentials = yaml.safe_load(f)
     return credentials
 
-# Load credentials from the YAML file
+# Loads credentials from the YAML file
 credentials = load_credentials('credentials.yaml')
 print(credentials)
 
 # Create class to extract data from PostgreSQL RDS database 
 class RDSDatabaseConnector:
     def __init__(self, credentials):
+        """
+        Initialises database connector with credentials as key-value pairs.
+        """
         self.RDS_HOST = credentials['RDS_HOST']
         self.RDS_PASSWORD = credentials['RDS_PASSWORD']
         self.RDS_USER = credentials['RDS_USER']
@@ -24,6 +35,10 @@ class RDSDatabaseConnector:
         self.engine = None
 
     def init_engine(self):
+        """
+        Initialises SQLAlchemy engine with credentials. 
+        Connection string created from credentials and passed through create_engine function.
+        """
         try:
             # Adjust the connection string for PostgreSQL (port 5432)
             connection_string = (
@@ -85,6 +100,11 @@ except Exception as e:
     print(f"An error occurred: {e}")
 
 # task 3 - import csv to pandas df
-
 customer_df = pd.read_csv("customer_activity_data.csv")
 print(customer_df)
+
+shape = customer_df.shape
+print(f"This data has {shape[0]} rows and {shape[1]} columns.")
+
+print(customer_df.info())
+
