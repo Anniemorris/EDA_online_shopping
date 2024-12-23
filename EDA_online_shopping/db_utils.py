@@ -21,6 +21,7 @@ def load_credentials(file):
 
     Args: 
     - file (str): path to YAML file 
+
     Returns: 
     - dict: credentials as dictionary 
     """
@@ -34,6 +35,18 @@ print(credentials)
 class RDSDatabaseConnector:
     """
     Class uses credentials to initialize a database, fetch data and then save to csv. 
+
+    Attributes:
+    - credentials(dict): multiple RDS keys to connect to database 
+    - query(str): default as "SELECT * FROM customer_activity LIMIT 100;"
+    - df(pd.DataFrame): dataframe to save
+    - file_name(str): name of file to save data to 
+
+    Methods: 
+    - _create_connection_string(): creates connection string from credentials
+    - initialize_engine(): generates connection string and initializes engine 
+    - fetch_data(query): fetches data from the database 
+    - save_data_to_csv(df, file_name): saves dataframe to csv file 
     """
     def __init__(self, credentials):
         """
@@ -154,6 +167,15 @@ print(customer_df.info())
 class DataTransform: 
     """
     Class handles data transformations within the dataframe. 
+
+    Attributes:
+    - dataframe(pd.DataFrame): dataframe to transform
+    - columns(List[str]): lists column names to be converted 
+
+    Methods: 
+    - object_to_category_transform(columns): converts object type columns to category type columns
+    - get_transformed_df(): returns transformed dataframe
+
     """
     def __init__(self, dataframe: pd.DataFrame):
         """
@@ -184,6 +206,15 @@ class DataTransform:
 class DataFrameInfo: 
     """
     Class gets basic info about the dataframe like data types, summary stats, unique values and shape. 
+
+    Attributes: 
+    - dataframe(pd.DataFrame): dataframe to get information from 
+
+    Methods: 
+    - get_data_types(dataframe): displays data types and other information in dataframe
+    - statistical_summary(dataframe): displays statistical summary of dataframe
+    - unique_values(dataframe): displays unique values and counts for each column of dataframe
+    - df_shape(dataframe): displays shape of dataframe
     """
     @staticmethod
     def get_data_types(dataframe: pd.DataFrame):
@@ -230,6 +261,16 @@ class DataFrameInfo:
 class DataFrameTransform:
     """
     Class performs dataframe transformations. 
+
+    Attributes: 
+    - dataframe(pd.DataFrame): dataframe to transform 
+    - skewed_columns(List[str]): list of skewed column names to transform
+
+    Methods: 
+    - calc_null_percentage(): calculates percentage of null values in each column of dataframe
+    - impute_missing_values(): imputes missing values based on column skewness
+    - log_skew_transform(skewed_columns): applies best transformation to reduce skewness (log, sqrt, boxcox) in given column
+    - get_transformed_df(): gets transformed dataframe
     """
     def __init__(self, dataframe: pd.DataFrame):
         """
@@ -328,6 +369,16 @@ class DataFrameTransform:
 class Plotter:
     """
     Class handles plotting data.
+
+    Attributes: 
+    - before_null(pd.Series): panda series before data imputation  
+    - after_null(pd.Series): panda series after data imputation 
+    - column_data(pd.Series): data to plot as histogram 
+    - title(str): title of the histogram
+    
+    Methods: 
+    - plot_null_comparison(before_null, after_null, title="Null values pre and post imputation"): plots comparison of null values percentage before and after data imputation
+    - plot_histogram(column_data, title): plots histograms for given column
     """
     @staticmethod
     def plot_null_comparison(before_null, after_null, title="Null values pre and post imputation"):
@@ -375,6 +426,16 @@ class Plotter:
 class FindSkew:
     """
     Class identifies skewed columns and plots histograms for them.
+
+    Attributes: 
+    - dataframe(pd.DataFrame): dataframe to analyse for skewed column
+    - threshold(float): skewness threshold 
+    - skew_columns(pd.Series): skewed columns to be plotted 
+    - plotter(Plotter): plotter instance to plot histograms 
+
+    Methods: 
+    - identify_skew(threshold=0.5): identifies skewed columns based on threshold of 0.5
+    - skew_hist(skew_columns, plotter): plots histograms for skewed columns
     """
     def __init__(self,dataframe):
         """
