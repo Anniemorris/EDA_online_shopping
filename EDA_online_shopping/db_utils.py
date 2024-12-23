@@ -726,11 +726,10 @@ def main():
     plt.xticks(ticks=range(1, 13), labels=['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'])
     plt.show()
 
-    # 1. Which region is currently generating the most/least revenue?
+    # 1. Which region is currently generating the most/least revenue? - North America 
     region_revenue = transformed_df_2.groupby('region')['revenue'].sum().sort_values(ascending=False)
     print(region_revenue)
 
-    # Visualize the results for revenue by region
     plt.figure(figsize=(10, 6))
     region_revenue.plot(kind='bar', title="Revenue by Region", color='lightcoral')
     plt.xlabel('Region')
@@ -738,7 +737,7 @@ def main():
     plt.xticks(rotation=45)
     plt.show()
 
-    # 2. What percentage of our returning/new customers are making a purchase when they visit the site?
+    # 2. What percentage of our returning/new customers are making a purchase when they visit the site? Returning = 12.5% New = 21%
     visitor_purchase = transformed_df_2.groupby('visitor_type')['revenue'].sum() / transformed_df_2.groupby('visitor_type')['revenue'].count() * 100
     print(visitor_purchase)
 
@@ -746,7 +745,7 @@ def main():
     plt.ylabel('Percentage of Purchases (%)')
     plt.show()
 
-    # 3. Are sales being made more on weekends comparatively to weekdays?
+    # 3. Are sales being made more on weekends comparatively to weekdays? More on weekday
     weekend_sales = transformed_df_2.groupby('weekend')['revenue'].sum()
     print(weekend_sales)
 
@@ -754,7 +753,7 @@ def main():
     plt.ylabel('Total Revenue')
     plt.show()
 
-    # 4. Which months have been the most effective for generating sales?
+    # 4. Which months have been the most effective for generating sales? May and November 
     monthly_sales = transformed_df_2.groupby('month')['revenue'].sum().sort_values(ascending=False)
     print(monthly_sales)
 
@@ -764,7 +763,7 @@ def main():
     plt.xticks(rotation=45)
     plt.show()
 
-    # 5. Is direct/social or advertising traffic contributing heavily to sales?
+    # 5. Is direct/social or advertising traffic contributing heavily to sales? Instagram contribues heavily
     ads_traffic_data = transformed_df_2[transformed_df_2['traffic_type'].str.contains('ads', case=False, na=False)]
 
     ads_traffic_sales = ads_traffic_data.groupby('traffic_type')['revenue'].sum()
