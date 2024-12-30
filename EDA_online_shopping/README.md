@@ -5,6 +5,7 @@ This project analyses retail data based on online shopping experiences.
 * db_utils.py - file to run for project tasks 
 * customer_activity_data.csv - fetched data from database 
 * transformed_customer_activity.csv - transformed data from customer_activity_data.csv 
+* eda.ipynb - notebook with EDA instructions - breakdown by task 
 
 ###  Installation Instructions:
 User requires the following installations: 
